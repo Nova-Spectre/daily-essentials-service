@@ -1,12 +1,8 @@
 package com.groceryapp.model;
 
+import com.groceryapp.constant.inventory.InventoryStatus;
 import com.groceryapp.model.common.Auditable;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -27,4 +23,11 @@ public class Inventory extends Auditable {
     private Item item;
 
     private Integer quantity;
+
+    @Enumerated(EnumType.STRING)
+    private InventoryStatus status;
+
+    public void updateStatus() {
+        this.status = (quantity > 0) ? InventoryStatus.AVAILABLE : InventoryStatus.OUT_OF_STOCK;
+    }
 }
