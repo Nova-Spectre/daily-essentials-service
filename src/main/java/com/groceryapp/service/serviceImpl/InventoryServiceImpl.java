@@ -17,11 +17,13 @@ import com.groceryapp.service.InventoryService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,6 +36,14 @@ public class InventoryServiceImpl implements InventoryService {
     private final ItemRepository itemRepository;
     private final InventoryRepository inventoryRepository;
 
+    /**
+     * Adds inventory for a given item, creating the brand, category, and item if they do not already exist.
+     * Updates the inventory quantity accordingly.
+     *
+     * @param request The inventory request containing brand, category, price, and quantity details.
+     * @return The updated inventory response after adding the inventory.
+     * @throws ServiceException If there is an invalid request or insufficient inventory.
+     */
     @Override
     @Transactional
     public InventoryResponse addInventory(InventoryRequest request) {
@@ -43,11 +53,21 @@ public class InventoryServiceImpl implements InventoryService {
         return updateInventory(item, request.getQuantity(), true);
     }
 
+    /**
+     * Retrieves all inventory items Asynchronously, mapping them to a list of InventoryResponse objects.
+     *
+     * @return A list of inventory responses.
+     */
     @Override
-    public List<InventoryResponse> getAllInventory() {
+    @Async
+    public CompletableFuture<List<InventoryResponse>> getAllInventory() {
         List<Inventory> inventoryList = inventoryRepository.findAll();
-        return inventoryList.stream().map(this::mapToInventoryResponse).collect(Collectors.toList());
+        List<InventoryResponse> inventoryResponses = inventoryList.stream()
+                .map(this::mapToInventoryResponse)
+                .collect(Collectors.toList());
+        return CompletableFuture.completedFuture(inventoryResponses);
     }
+
 
     private Brand getBrandByName(String brandName) {
         return brandRepository.findByName(brandName).orElseGet(() -> {

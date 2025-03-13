@@ -12,4 +12,5 @@ public class Constants {
     public static final int MAX_LIST_SIZE = 20;
     public static final String DEFAULT_SORT_FIELD = "price";
     public static final String DEFAULT_SORT_DIRECTION = "asc";
+    public static final String QUANTITY="quantity";
 }

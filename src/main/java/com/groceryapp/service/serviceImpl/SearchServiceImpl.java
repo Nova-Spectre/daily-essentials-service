@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import com.groceryapp.constant.common.ErrorCode;
+import com.groceryapp.exception.ServiceException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
@@ -28,11 +30,31 @@ public class SearchServiceImpl implements SearchService {
 
     private final InventoryRepository inventoryRepository;
 
+    /**
+     * Searches for items in the inventory based on provided filters (brands, categories, price range) and applies pagination.
+     *
+     * @param brands    List of brand names to filter by.
+     * @param categories List of category names to filter by.
+     * @param minPrice  Minimum price to filter items.
+     * @param maxPrice  Maximum price to filter items.
+     * @param pageable  Pageable object that specifies pagination details (page number, page size, sorting).
+     * @return Paginated response containing the search results.
+     * @throws ServiceException if no items are found in the inventory or no items match the search criteria.
+     */
     @Override
     public PaginatedResponse<SearchResultItem> searchItems(List<String> brands, List<String> categories,
             Double minPrice, Double maxPrice, Pageable pageable) {
         List<Inventory> allInventory = inventoryRepository.findAll();
+
+        if (allInventory.isEmpty()) {
+            throw new ServiceException(ErrorCode.INVENTORY_ITEM_NOT_FOUND, "No items found in the inventory");
+        }
+
         List<Inventory> filteredInventory = applyFilters(allInventory, brands, categories, minPrice, maxPrice);
+
+        if (filteredInventory.isEmpty()) {
+            throw new ServiceException(ErrorCode.ITEM_NOT_FOUND, "No items found matching the search criteria");
+        }
 
         Sort.Order order = pageable.getSort().isSorted() ? pageable.getSort().toList().get(0) : null;
         List<Inventory> sortedInventory = applySorting(filteredInventory, order);
@@ -91,7 +113,7 @@ public class SearchServiceImpl implements SearchService {
         boolean isAscending = order.getDirection() == Direction.ASC;
 
         if (Constants.VALID_SORT_FIELDS.contains(order.getProperty())) {
-            if ("quantity".equals(order.getProperty())) {
+            if (Constants.QUANTITY.equals(order.getProperty())) {
                 comparator = Comparator.comparingInt(Inventory::getQuantity);
             } else {
                 comparator = Comparator.comparing(inv -> inv.getItem().getPrice(),

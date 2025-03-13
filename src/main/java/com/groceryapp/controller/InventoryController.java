@@ -11,6 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 @RestController
 @RequestMapping("/v1/inventory")
@@ -29,9 +31,11 @@ public class InventoryController {
     }
 
     @GetMapping()
-    public ResponseEntity<GenericResponseWrapper<List<InventoryResponse>>> getInventory() {
+    public ResponseEntity<GenericResponseWrapper<List<InventoryResponse>>> getInventory() throws ExecutionException, InterruptedException {
         log.info("Fetching all inventory");
-        List<InventoryResponse> inventory = inventoryService.getAllInventory();
+        CompletableFuture<List<InventoryResponse>> inventoryFuture = inventoryService.getAllInventory();
+        List<InventoryResponse> inventory = inventoryFuture.get();
         return ResponseEntity.ok(GenericResponseWrapper.success(inventory));
     }
+
 }

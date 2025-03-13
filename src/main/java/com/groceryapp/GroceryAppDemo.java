@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 @Component
 @RequiredArgsConstructor
@@ -75,16 +76,19 @@ public class GroceryAppDemo implements CommandLineRunner {
         log.info("Updated inventory: {} - {} (Quantity: {})", response.getBrand(), response.getCategory(),
                 response.getQuantity());
     }
-
     private void displayAllInventory() {
         log.info("=== Current Inventory ===");
-        List<InventoryResponse> inventory = inventoryService.getAllInventory();
-
-        for (InventoryResponse item : inventory) {
-            log.info("{} -> {} -> {} (Status: {})", item.getBrand(), item.getCategory(), item.getQuantity(),
-                    item.getStatus());
+        try {
+            List<InventoryResponse> inventory = inventoryService.getAllInventory().get();
+            for (InventoryResponse item : inventory) {
+                log.info("{} -> {} -> {} (Status: {})", item.getBrand(), item.getCategory(), item.getQuantity(),
+                        item.getStatus());
+            }
+        } catch (InterruptedException | ExecutionException e) {
+            log.error("Error occurred while fetching inventory: {}", e.getMessage());
         }
     }
+
 
     private void performSearchDemonstrations() {
         log.info("=== Search by Brand ===");
