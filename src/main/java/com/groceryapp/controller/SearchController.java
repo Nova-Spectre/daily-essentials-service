@@ -1,9 +1,7 @@
 package com.groceryapp.controller;
 
 import java.util.List;
-
 import com.groceryapp.constant.common.ErrorCode;
-import com.groceryapp.dto.response.common.ErrorResponseWrapper;
 import com.groceryapp.dto.response.common.PaginatedResponse;
 import com.groceryapp.dto.response.search.SearchResultItem;
 import com.groceryapp.exception.ServiceException;
